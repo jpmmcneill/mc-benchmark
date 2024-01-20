@@ -6,9 +6,11 @@ import multiprocessing
 
 import yaml
 import pandas
+import duckdb
 
 from memory_profiler import memory_usage
 
+from mc_benchmark import benchmark_results_folder, scenario_folder
 from mc_benchmark.calculators import NumpyCalculator, DuckDBCalculator, NumbaCalculator
 
 
@@ -39,13 +41,13 @@ class ScenarioType(str, enum.Enum):
         start = time.perf_counter()
         result = memory_usage((function, tuple(), arguments), **config)
         end = time.perf_counter()
-        results.append(result)
+        results.append({"function_iteration": 1, "data": result})
 
         projected_min_runs = min_time / (end - start)
-        for _ in range(
+        for i in range(
             min(max_runs, max(min_runs - 1, round(projected_min_runs)))
         ):
-            result = memory_usage((function, tuple(), arguments), **config)
+            result = {"function_iteration": i+2, "data": memory_usage((function, tuple(), arguments), **config)}
             results.append(result)
         return results
 
@@ -112,22 +114,6 @@ class Scenario:
         """
     
     @classmethod
-    def from_yaml(cls, name = "scenarios.yml"):
-        file = pathlib.Path(__file__).parent.parent / name
-        with open(file) as f:
-            data = yaml.safe_load(f)
-        dicts = []
-        for data_dict in data:
-            if isinstance(samples:=data_dict.get("function_arguments", {}).get("num_samples"), list):
-                dicts.extend([
-                    {**data_dict, 'function_arguments': {**data_dict['function_arguments'], 'num_samples': num_sample}}
-                    for num_sample in samples
-                ])
-            else:
-                dicts.append(data_dict)
-        return [cls.parse_dict(d) for d in dicts]
-    
-    @classmethod
     def parse_dict(cls, data: dict):
         if data["type"] == "duckdb":
             calc = DuckDBCalculator
@@ -148,25 +134,37 @@ class Benchmark:
     def __init__(
             self,
             scenarios: list[Scenario],
+            name: str
         ) -> None:
 
         self.scenarios = scenarios
+        self.name = name
         self.queue: multiprocessing.Queue = multiprocessing.Queue()
-        self.results_cache = {
-            "type": [],
-            "function": [],
-            "run_iter": [],
-            "total_time": [],
-            "function_arguments": [],
-            "scenario_type": [],
-            "result": [],
-            "profiler_arguments": [],
-        }
-
 
     def process_scenarios(self):
         print("Starting benchmarking!")
-        for scenario in self.scenarios:
+        con = duckdb.connect(str(benchmark_results_folder / f"{self.name}.duckdb"))
+        con.sql("""
+        create or replace table results (
+            type text,
+            scenario_number integer,
+            scenario_type text,
+            function text,
+            num_samples integer,
+            function_arguments union(
+                -- pi_calc is always empty, this is what {} looks like in duckdb...
+                pi_calc map(integer, integer),
+                roulette_sim struct(turn_limit integer)
+            ),
+            profiler_arguments text,
+            total_time double,
+            result union(
+                time_result double[],
+                memory_result struct(function_iteration integer, data double[])[]
+            )
+        )
+        """)
+        for i, scenario in enumerate(self.scenarios):
             p = scenario.to_process(self.queue)
             print("Running scenario:")
             print(scenario)
@@ -177,34 +175,43 @@ class Benchmark:
             print("Sleeping...")
             time.sleep(3)
             result_data = {
-                "type": scenario.type,
-                "function": scenario.function.__name__,
-                "run_iter": 1,
-                "total_time": exec_time,
-                "function_arguments": scenario.function_arguments,
-                "scenario_type": scenario.scenario_type.value,
-                "result": result,
-                "profiler_arguments": scenario.profiler_arguments,
+                "type": [scenario.type],
+                "scenario_number": [i],
+                "scenario_type": [scenario.scenario_type.value],
+                "function": [scenario.function.__name__],
+                "num_samples": [scenario.function_arguments.pop("num_samples")],
+                "function_arguments": [scenario.function_arguments],
+                "profiler_arguments": [scenario.profiler_arguments],
+                "total_time": [exec_time],
+                "result": [result],
             }
-            for k in self.results_cache:
-                self.results_cache[k].append(result_data[k])
+            scenario_result = pandas.DataFrame(result_data)
+            con.execute("insert into results select * from scenario_result")
         print("Benchmarking done!")
-        benchmark_result = pandas.DataFrame(self.results_cache)
-        benchmark_result.to_csv("result.csv")
-        import pdb
-        pdb.set_trace()
-        return None
-
-    @staticmethod
-    def check_files():
-        folder = pathlib.Path(__file__).parent / "results"
-        files = list(folder.glob("*.csv"))
-        if not files:
-            return 1
-
+        print("Outputting data...")
+        con.execute(f"copy (select * from results) to '{benchmark_results_folder}/{self.name}.csv'")
+        con.execute(f"copy (select * from results) to '{benchmark_results_folder}/{self.name}.parquet'")
+        return
 
     def memory_benchmark():
         pass
 
     def time_benchmark():
         pass
+
+    @classmethod
+    def from_yaml(cls, scenario: str):
+        file = scenario_folder / (scenario+".yml")
+        with open(file) as f:
+            data = yaml.safe_load(f)
+        dicts = []
+        for data_dict in data:
+            if isinstance(samples:=data_dict.get("function_arguments", {}).get("num_samples"), list):
+                dicts.extend([
+                    {**data_dict, 'function_arguments': {**data_dict['function_arguments'], 'num_samples': num_sample}}
+                    for num_sample in samples
+                ])
+            else:
+                dicts.append(data_dict)
+        scenarios = [Scenario.parse_dict(d) for d in dicts]
+        return cls(scenarios, name=scenario)

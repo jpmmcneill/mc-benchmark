@@ -36,10 +36,11 @@ class NumpyCalculator(BaseCalculator):
                 values[:, turn - 1]
             )
 
-        sample_numbers = np.repeat(np.arange(1, num_samples + 1), turn_limit)
-        turn_numbers = np.tile(np.arange(turn_limit), num_samples)
-        flattened_values = values.flatten()
-        return np.column_stack((sample_numbers, turn_numbers, flattened_values))
+        return values
+        # sample_numbers = np.repeat(np.arange(1, num_samples + 1), turn_limit)
+        # turn_numbers = np.tile(np.arange(turn_limit), num_samples)
+        # flattened_values = values.flatten()
+        # return np.column_stack((sample_numbers, turn_numbers, flattened_values))
             
     @staticmethod
     def casino_simulation_aggregated(
@@ -94,11 +95,7 @@ class NumpyCalculator(BaseCalculator):
 
         # Insert starting value as the first column
         values = np.hstack([np.full((num_samples, 1), starting_value), values[:, :-1]])
-
-        sample_numbers = np.repeat(np.arange(1, num_samples + 1), turn_limit)
-        turn_numbers = np.tile(np.arange(turn_limit), num_samples)
-        flattened_values = values.flatten()
-        return np.column_stack((sample_numbers, turn_numbers, flattened_values))
+        return values
 
     @staticmethod
     def casino_simulation_vectorized_aggregated(
@@ -123,11 +120,6 @@ class NumpyCalculator(BaseCalculator):
 
         # Insert starting value as the first column
         values = np.hstack([np.full((num_samples, 1), starting_value), values[:, :-1]])
-
-        # sample_numbers = np.repeat(np.arange(1, num_samples + 1), turn_limit)
-        # turn_numbers = np.tile(np.arange(turn_limit), num_samples)
-        # flattened_values = values.flatten()
-        # return np.column_stack((sample_numbers, turn_numbers, flattened_values))
 
         # Calculate average value and SEM for each turn
         avg_values = values.mean(axis=0)
