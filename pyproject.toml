@@ -17,6 +17,7 @@ pyarrow = "^14.0.2"
 pyyaml = "^6.0.1"
 click = "^8.1.7"
 jupyter = "^1.0.0"
+dash = "^2.14.2"
 
 
 [build-system]

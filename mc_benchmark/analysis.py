@@ -2,7 +2,7 @@ import pathlib
 
 import duckdb
 
-from mc_benchmark import benchmark_results_folder
+from mc_benchmark import benchmark_results_folder, analysis_folder
 
 
 def run_analysis(scenario: str):
@@ -15,7 +15,8 @@ def run_analysis(scenario: str):
         raise FileNotFoundError(f"No benchmark output found for {scenario}.")
 
     time_analysis = con.execute(
-        """
+        f"""
+        copy (
         with time_unnest as (
             select
                 type,
@@ -42,13 +43,16 @@ def run_analysis(scenario: str):
             num_samples desc,
             turn_limit desc,
             average_time_taken asc
+        ) to '{analysis_folder}/{scenario}_time.csv'
         """
-    ).df()
+    )
 
     memory_analysis = con.execute(
-        """
+        f"""
+        copy (
         with initial_unnest as (
             select
+                scenario_number,
                 type,
                 function,
                 num_samples,
@@ -61,6 +65,7 @@ def run_analysis(scenario: str):
 
         memory_measurement_unnest as (
             select
+                scenario_number,
                 type,
                 function,
                 num_samples,
@@ -69,24 +74,23 @@ def run_analysis(scenario: str):
                 memory_data.function_iteration,
                 unnest(memory_data.data) as memory_taken,
             from initial_unnest
+        ),
+
+        include_row_number as (
+            select
+                scenario_number,
+                type,
+                function,
+                num_samples,
+                turn_limit,
+                total_time,
+                function_iteration,
+                memory_taken,
+                0.1 * row_number() over (partition by scenario_number, function_iteration) as time_s
+            from memory_measurement_unnest
         )
 
-        select
-            type,
-            function,
-            num_samples,
-            turn_limit,
-            total_time,
-            avg(memory_taken) as average_memory_taken,
-            median(memory_taken) as median_memory_taken,
-            max(memory_taken) as max_memory_taken,
-        from memory_measurement_unnest
-        group by all
-        order by
-            num_samples desc,
-            turn_limit desc
+        select * from include_row_number
+        ) to '{analysis_folder}/{scenario}_memory.csv'
         """
-    ).df()
-
-    import pdb
-    pdb.set_trace()
+    )

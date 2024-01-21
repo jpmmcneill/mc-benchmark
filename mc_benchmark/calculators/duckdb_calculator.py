@@ -66,7 +66,10 @@ class DuckDBCalculator(BaseCalculator):
             select
                 turn,
                 avg(value) as avg_value,
-                var_samp(value) as var_samp_value
+                -- using the inbuilt stddev_pop is much slower, so do it by hand
+                sqrt(
+                    (sum(value*value)/count(*) - avg(value)**2)/count(*)
+                ) as var_samp_value
             from casino
             group by all
             order by turn asc
