@@ -11,7 +11,7 @@ class DuckDBCalculator(BaseCalculator):
             select 4 * sum(cast(random()**2 + random()**2 < 1 as int)) / count(*) as pi
             from generate_series(1, {num_samples})
             """
-        ).df()
+        ).arrow()
         return data.squeeze()
 
     @staticmethod
@@ -69,7 +69,7 @@ class DuckDBCalculator(BaseCalculator):
                 -- using the inbuilt stddev_pop is much slower, so do it by hand
                 sqrt(
                     (sum(value*value)/count(*) - avg(value)**2)/count(*)
-                ) as var_samp_value
+                ) as avg_value_error
             from casino
             group by all
             order by turn asc

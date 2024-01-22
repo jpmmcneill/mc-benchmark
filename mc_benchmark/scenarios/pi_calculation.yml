@@ -2,13 +2,17 @@
 - type: numpy
   function: pi_calculator
   function_arguments: &pi_samples_time
-    num_samples: [100000, 1000000, 10000000, 50000000, 100000000, 500000000, 1000000000]
+    num_samples: [1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1000000000]
   scenario_type: time
 - type: duckdb
   function: pi_calculator
   function_arguments: *pi_samples_time
   scenario_type: time
 - type: numba
+  function: pi_calculator
+  function_arguments: *pi_samples_time
+  scenario_type: time
+- type: polars
   function: pi_calculator
   function_arguments: *pi_samples_time
   scenario_type: time
@@ -16,13 +20,17 @@
 - type: numpy
   function: pi_calculator
   function_arguments: &pi_samples_memory
-    num_samples: [100000, 1000000, 10000000, 100000000, 1000000000]
+    num_samples: [1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1000000000]
   scenario_type: memory
 - type: duckdb
   function: pi_calculator
   function_arguments: *pi_samples_memory
   scenario_type: memory
 - type: numba
+  function: pi_calculator
+  function_arguments: *pi_samples_memory
+  scenario_type: memory
+- type: polars
   function: pi_calculator
   function_arguments: *pi_samples_memory
   scenario_type: memory

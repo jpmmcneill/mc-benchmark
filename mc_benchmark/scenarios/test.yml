@@ -1,17 +1,6 @@
 - type: duckdb
-  function: casino_simulation
+  function: casino_simulation_aggregated
   scenario_type: time
   function_arguments:
-    num_samples: 1000
-    turn_limit: 1000
-- type: numpy
-  function: casino_simulation
-  scenario_type: memory
-  function_arguments:
-    num_samples: 1000
-    turn_limit: 1000
-- type: duckdb
-  function: pi_calculator
-  scenario_type: time
-  function_arguments:
-    num_samples: 1000
+    num_samples: 300000
+    turn_limit: 5000

@@ -11,8 +11,11 @@ import duckdb
 from memory_profiler import memory_usage
 
 from mc_benchmark import benchmark_results_folder, scenario_folder
-from mc_benchmark.calculators import NumpyCalculator, DuckDBCalculator, NumbaCalculator
+from mc_benchmark.calculators import NumpyCalculator, DuckDBCalculator, NumbaCalculator, PolarsCalculator
 
+MIN_RUNS_PER_PROFILE = 5
+MIN_TIME_PER_PROFILE = 10  # seconds
+MAX_RUNS_PER_PROFILE = 1000
 
 class ScenarioType(str, enum.Enum):
     NONE = "none"
@@ -34,18 +37,15 @@ class ScenarioType(str, enum.Enum):
 
     @staticmethod
     def memory_profiler(function, arguments, config={}):
-        min_runs = 3
-        min_time = 10  # seconds
-        max_runs = 1000
         results = []
         start = time.perf_counter()
         result = memory_usage((function, tuple(), arguments), **config)
         end = time.perf_counter()
         results.append({"function_iteration": 1, "data": result})
 
-        projected_min_runs = min_time / (end - start)
+        projected_min_runs = MIN_TIME_PER_PROFILE / (end - start)
         for i in range(
-            min(max_runs, max(min_runs - 1, round(projected_min_runs)))
+            min(MAX_RUNS_PER_PROFILE, max(MIN_RUNS_PER_PROFILE - 1, round(projected_min_runs)))
         ):
             result = {"function_iteration": i+2, "data": memory_usage((function, tuple(), arguments), **config)}
             results.append(result)
@@ -53,18 +53,15 @@ class ScenarioType(str, enum.Enum):
 
     @staticmethod
     def time_profiler(function, arguments, config={}):
-        min_runs = 3
-        min_time = 10  # seconds
-        max_runs = 1000
         results = []
         start = time.perf_counter()
         function(**arguments)
         end = time.perf_counter()
         results.append(end-start)
 
-        projected_min_runs = min_time / (end - start)
+        projected_min_runs = MIN_TIME_PER_PROFILE / (end - start)
         for _ in range(
-            min(max_runs, max(min_runs - 1, round(projected_min_runs)))
+            min(MAX_RUNS_PER_PROFILE, max(MIN_RUNS_PER_PROFILE - 1, round(projected_min_runs)))
         ):
             start = time.perf_counter()
             function(**arguments)
@@ -121,6 +118,8 @@ class Scenario:
             calc = NumpyCalculator
         elif data["type"] == "numba":
             calc = NumbaCalculator
+        elif data["type"] == "polars":
+            calc = PolarsCalculator
         function = getattr(calc, data["function"])
         return cls(
             type=data["type"],

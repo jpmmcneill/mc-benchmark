@@ -4,24 +4,32 @@
     num_samples: [20000, 50000, 100000, 150000, 200000, 250000, 300000]
     turn_limit: 1000
   scenario_type: time
-- type: numpy
-  function: casino_simulation
-  function_arguments: *sample1
-  scenario_type: time
-- type: numpy
-  function: casino_simulation_vectorized
-  function_arguments: *sample1
-  scenario_type: time
 - type: duckdb
   function: casino_simulation_aggregated
   function_arguments: *sample1
   scenario_type: time
 - type: numpy
-  function: casino_simulation_aggregated
+  function: casino_simulation
   function_arguments: *sample1
   scenario_type: time
 - type: numpy
-  function: casino_simulation_vectorized_aggregated
+  function: casino_simulation_aggregated
+  function_arguments: *sample1
+  scenario_type: time
+- type: numba
+  function: casino_simulation
+  function_arguments: *sample1
+  scenario_type: time
+- type: numba
+  function: casino_simulation_aggregated
+  function_arguments: *sample1
+  scenario_type: time
+- type: polars
+  function: casino_simulation
+  function_arguments: *sample1
+  scenario_type: time
+- type: polars
+  function: casino_simulation_aggregated
   function_arguments: *sample1
   scenario_type: time
 
@@ -31,24 +39,32 @@
     num_samples: [20000, 50000, 100000, 150000, 200000, 250000, 300000]
     turn_limit: 3000
   scenario_type: time
-- type: numpy
-  function: casino_simulation
-  function_arguments: *sample2
-  scenario_type: time
-- type: numpy
-  function: casino_simulation_vectorized
-  function_arguments: *sample2
-  scenario_type: time
 - type: duckdb
   function: casino_simulation_aggregated
   function_arguments: *sample2
   scenario_type: time
 - type: numpy
-  function: casino_simulation_aggregated
+  function: casino_simulation
   function_arguments: *sample2
   scenario_type: time
 - type: numpy
-  function: casino_simulation_vectorized_aggregated
+  function: casino_simulation_aggregated
+  function_arguments: *sample2
+  scenario_type: time
+- type: numba
+  function: casino_simulation
+  function_arguments: *sample2
+  scenario_type: time
+- type: numba
+  function: casino_simulation_aggregated
+  function_arguments: *sample2
+  scenario_type: time
+- type: polars
+  function: casino_simulation
+  function_arguments: *sample2
+  scenario_type: time
+- type: polars
+  function: casino_simulation_aggregated
   function_arguments: *sample2
   scenario_type: time
 
@@ -58,24 +74,32 @@
     num_samples: [20000, 50000, 100000, 150000, 200000, 250000, 300000]
     turn_limit: 5000
   scenario_type: time
-- type: numpy
-  function: casino_simulation
-  function_arguments: *sample3
-  scenario_type: time
-- type: numpy
-  function: casino_simulation_vectorized
-  function_arguments: *sample3
-  scenario_type: time
 - type: duckdb
   function: casino_simulation_aggregated
   function_arguments: *sample3
   scenario_type: time
 - type: numpy
-  function: casino_simulation_aggregated
+  function: casino_simulation
   function_arguments: *sample3
   scenario_type: time
 - type: numpy
-  function: casino_simulation_vectorized_aggregated
+  function: casino_simulation_aggregated
+  function_arguments: *sample3
+  scenario_type: time
+- type: numba
+  function: casino_simulation
+  function_arguments: *sample3
+  scenario_type: time
+- type: numba
+  function: casino_simulation_aggregated
+  function_arguments: *sample3
+  scenario_type: time
+- type: polars
+  function: casino_simulation
+  function_arguments: *sample3
+  scenario_type: time
+- type: polars
+  function: casino_simulation_aggregated
   function_arguments: *sample3
   scenario_type: time
 
@@ -83,24 +107,32 @@
   function: casino_simulation
   function_arguments: *sample1
   scenario_type: memory
-- type: numpy
-  function: casino_simulation
-  function_arguments: *sample1
-  scenario_type: memory
-- type: numpy
-  function: casino_simulation_vectorized
-  function_arguments: *sample1
-  scenario_type: memory
 - type: duckdb
   function: casino_simulation_aggregated
   function_arguments: *sample1
   scenario_type: memory
 - type: numpy
-  function: casino_simulation_aggregated
+  function: casino_simulation
   function_arguments: *sample1
   scenario_type: memory
 - type: numpy
-  function: casino_simulation_vectorized_aggregated
+  function: casino_simulation_aggregated
+  function_arguments: *sample1
+  scenario_type: memory
+- type: numba
+  function: casino_simulation
+  function_arguments: *sample1
+  scenario_type: memory
+- type: numba
+  function: casino_simulation_aggregated
+  function_arguments: *sample1
+  scenario_type: memory
+- type: polars
+  function: casino_simulation
+  function_arguments: *sample1
+  scenario_type: memory
+- type: polars
+  function: casino_simulation_aggregated
   function_arguments: *sample1
   scenario_type: memory
 
@@ -108,24 +140,32 @@
   function: casino_simulation
   function_arguments: *sample2
   scenario_type: memory
-- type: numpy
-  function: casino_simulation
-  function_arguments: *sample2
-  scenario_type: memory
-- type: numpy
-  function: casino_simulation_vectorized
-  function_arguments: *sample2
-  scenario_type: memory
 - type: duckdb
   function: casino_simulation_aggregated
   function_arguments: *sample2
   scenario_type: memory
 - type: numpy
-  function: casino_simulation_aggregated
+  function: casino_simulation
   function_arguments: *sample2
   scenario_type: memory
 - type: numpy
-  function: casino_simulation_vectorized_aggregated
+  function: casino_simulation_aggregated
+  function_arguments: *sample2
+  scenario_type: memory
+- type: numba
+  function: casino_simulation
+  function_arguments: *sample2
+  scenario_type: memory
+- type: numba
+  function: casino_simulation_aggregated
+  function_arguments: *sample2
+  scenario_type: memory
+- type: polars
+  function: casino_simulation
+  function_arguments: *sample2
+  scenario_type: memory
+- type: polars
+  function: casino_simulation_aggregated
   function_arguments: *sample2
   scenario_type: memory
 
@@ -133,23 +173,31 @@
   function: casino_simulation
   function_arguments: *sample3
   scenario_type: memory
-- type: numpy
-  function: casino_simulation
-  function_arguments: *sample3
-  scenario_type: memory
-- type: numpy
-  function: casino_simulation_vectorized
-  function_arguments: *sample3
-  scenario_type: memory
 - type: duckdb
   function: casino_simulation_aggregated
   function_arguments: *sample3
   scenario_type: memory
 - type: numpy
-  function: casino_simulation_aggregated
+  function: casino_simulation
   function_arguments: *sample3
   scenario_type: memory
 - type: numpy
-  function: casino_simulation_vectorized_aggregated
+  function: casino_simulation_aggregated
+  function_arguments: *sample3
+  scenario_type: memory
+- type: numba
+  function: casino_simulation
+  function_arguments: *sample3
+  scenario_type: memory
+- type: numba
+  function: casino_simulation_aggregated
+  function_arguments: *sample3
+  scenario_type: memory
+- type: polars
+  function: casino_simulation
+  function_arguments: *sample3
+  scenario_type: memory
+- type: polars
+  function: casino_simulation_aggregated
   function_arguments: *sample3
   scenario_type: memory

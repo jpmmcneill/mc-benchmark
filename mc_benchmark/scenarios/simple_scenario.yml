@@ -1,0 +1,24 @@
+- type: duckdb
+  function: casino_simulation
+  scenario_type: memory
+  function_arguments:
+    num_samples: 100000
+    turn_limit: 3000
+- type: numpy
+  function: casino_simulation
+  scenario_type: memory
+  function_arguments:
+    num_samples: 100000
+    turn_limit: 3000
+- type: numba
+  function: casino_simulation
+  scenario_type: memory
+  function_arguments:
+    num_samples: 100000
+    turn_limit: 3000
+- type: polars
+  function: casino_simulation
+  scenario_type: memory
+  function_arguments:
+    num_samples: 100000
+    turn_limit: 3000
