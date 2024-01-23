@@ -1,6 +1,0 @@
-- type: duckdb
-  function: casino_simulation_aggregated
-  scenario_type: time
-  function_arguments:
-    num_samples: 300000
-    turn_limit: 5000

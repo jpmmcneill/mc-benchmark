@@ -12,7 +12,7 @@ class DuckDBCalculator(BaseCalculator):
             from generate_series(1, {num_samples})
             """
         ).arrow()
-        return data.squeeze()
+        return data[0][0].as_py()
 
     @staticmethod
     def casino_simulation(num_samples: int = 1000, turn_limit: int = 1000, starting_value: int = 1000, win_loss_diff: int = 10):
