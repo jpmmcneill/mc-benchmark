@@ -15,7 +15,7 @@ This outputs data for this scenario to the `benchmark_results` folder.
 Run `python bm.py benchmark -s simple_scenario` to run analysis the "hello world" scenario.
 This requires the benchmark_results data to be populated for the given scenario.
 
-Some scenarios take a long time to benchmark (for example: `casino_simulation` takes > 1 hour on an m3 max macbook pro).
+Some scenarios take a long time to benchmark (for example: `casino_simulation` takes ~8 hours on an m3 max macbook pro).
 Depending on your hardware, it may be worth it to trim down the scenario you run!
 
 ### Available commands
