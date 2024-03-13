@@ -19,7 +19,7 @@
   scenario_type: memory
   function_arguments:
     num_samples: 10000000
-# MEMORY
+# CASINO
 - type: duckdb
   function: casino_simulation
   scenario_type: time

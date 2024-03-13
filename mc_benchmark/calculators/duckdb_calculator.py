@@ -1,18 +1,54 @@
+import concurrent.futures
+
 import duckdb
 
 from mc_benchmark.calculators.base_calculator import BaseCalculator
 
 class DuckDBCalculator(BaseCalculator):
-    
     @staticmethod
-    def pi_calculator(num_samples: int = 1000):
-        data = duckdb.execute(
-            f"""
-            select 4 * sum(cast(random()**2 + random()**2 < 1 as int)) / count(*) as pi
-            from generate_series(1, {num_samples})
-            """
-        ).arrow()
+    def pi_calculator(num_samples: int = 1000, num_threads: int = 1):
+        if num_threads == 1:
+            data = duckdb.execute(
+                f"""
+                select 4 * sum(cast(random()**2 + random()**2 < 1 as int)) / count(*) as pi
+                from generate_series(1, {num_samples})
+                """
+            ).arrow()
+        else:
+            def _run_query(_num_samples: int):
+                con = duckdb.connect()
+                return con.sql(
+                    f"""
+                    select sum(cast(random()**2 + random()**2 < 1 as int)) as num_in_circle, count(*) as num_total
+                    from generate_series(1, {_num_samples})
+                    """
+                ).arrow()
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+                # Using a dictionary comprehension to map future to its sequence number
+                future_to_number = {
+                    executor.submit(_run_query, num_samples // num_threads): number
+                    for number in range(1, num_threads + 1)
+                }
+
+                dict_data = {}
+            
+                for future in concurrent.futures.as_completed(future_to_number):
+                    number = future_to_number[future]
+                    dict_data[number] = future.result()
+
+            for i in dict_data.keys():
+                exec(f"result_{i} = dict_data[{i}]")
+            
+            union_query = " union all ".join(f"select * from result_{i}" for i in dict_data)
+
+            data = duckdb.sql(
+                f"""
+                select 4 * sum(num_in_circle) / sum(num_total) from ({union_query})
+                """
+            ).arrow()
         return data[0][0].as_py()
+
 
     @staticmethod
     def casino_simulation(num_samples: int = 1000, turn_limit: int = 1000, starting_value: int = 1000, win_loss_diff: int = 10):
@@ -104,3 +140,9 @@ class DuckDBCalculator(BaseCalculator):
             """
         ).arrow()
         return data
+
+
+
+# TODO: threaded version(s)
+    
+    # how can we make it so that aggregated version is summable easily on the way out

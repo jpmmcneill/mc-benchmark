@@ -1,0 +1,26 @@
+# - type: duckdb
+#   function: pi_calculator
+#   scenario_type: time
+#   function_arguments:
+#     num_samples: 1000000000
+    # num_threads: [1, 5, 10, 50, 100, 500]
+    # error at 1000 threads, fine at 500
+# - type: numpy
+#   function: pi_calculator
+#   scenario_type: time
+#   function_arguments:
+#     num_samples: 1000000000
+
+# - type: duckdb
+#   function: pi_calculator
+#   scenario_type: memory
+#   function_arguments:
+#     num_samples: 1000000000
+#     num_threads: [1, 5, 10]
+    # error at 1000 threads, fine at 500
+- type: numpy
+  function: pi_calculator
+  scenario_type: time
+  function_arguments:
+    num_samples: 1000000000
+    num_threads: [10]

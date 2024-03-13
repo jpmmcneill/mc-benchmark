@@ -1,4 +1,5 @@
 import enum
+import itertools
 import pathlib
 import time
 import typing
@@ -111,7 +112,7 @@ class Scenario:
         """
     
     @classmethod
-    def parse_dict(cls, data: dict):
+    def from_dict(cls, data: dict):
         if data["type"] == "duckdb":
             calc = DuckDBCalculator
         elif data["type"] == "numpy":
@@ -128,6 +129,29 @@ class Scenario:
             scenario_type=data["scenario_type"],
             profiler_arguments=data.get("profiler_arguments", {}),
         )
+    
+    @staticmethod
+    def extend_dict(data: list[dict]) -> list[dict]:
+        """Unnest list values under special keys of a dictionary into other dicitonaries."""
+        extendable_keys = ["num_samples", "num_threads", "turn_limit"]
+        updated_data = []
+        for dict_item in data:
+            for k in extendable_keys:
+                if k in dict_item.get("function_arguments", {}) and not isinstance(dict_item["function_arguments"][k], list):
+                    dict_item["function_arguments"][k] = [dict_item["function_arguments"][k]]
+            updated_data.extend(
+                [
+                    {
+                        **dict_item,
+                        "function_arguments": {
+                            **dict_item["function_arguments"],
+                            **{extendable_keys[i]: val for i, val in enumerate(unnested_tuple) if val is not None}
+                        }
+                    }
+                    for unnested_tuple in itertools.product(*(dict_item["function_arguments"].get(k, [None]) for k in extendable_keys))
+                ]
+            )
+        return updated_data
 
 class Benchmark:
     def __init__(
@@ -150,6 +174,7 @@ class Benchmark:
             scenario_type text,
             function text,
             num_samples integer,
+            num_threads integer,
             function_arguments union(
                 -- pi_calc is always empty, this is what {} looks like in duckdb...
                 pi_calc map(integer, integer),
@@ -173,12 +198,21 @@ class Benchmark:
             print(f"Finished scenario in {exec_time} seconds")
             print("Sleeping...")
             time.sleep(3)
+            try:
+                num_samples = scenario.function_arguments.pop("num_samples")
+            except KeyError:
+                num_samples = None
+            try:
+                num_threads = scenario.function_arguments.pop("num_threads")
+            except KeyError:
+                num_threads = None
             result_data = {
                 "type": [scenario.type],
                 "scenario_number": [i],
                 "scenario_type": [scenario.scenario_type.value],
                 "function": [scenario.function.__name__],
-                "num_samples": [scenario.function_arguments.pop("num_samples")],
+                "num_samples": [num_samples],
+                "num_threads": [num_threads],
                 "function_arguments": [scenario.function_arguments],
                 "profiler_arguments": [scenario.profiler_arguments],
                 "total_time": [exec_time],
@@ -203,14 +237,6 @@ class Benchmark:
         file = scenario_folder / (scenario+".yml")
         with open(file) as f:
             data = yaml.safe_load(f)
-        dicts = []
-        for data_dict in data:
-            if isinstance(samples:=data_dict.get("function_arguments", {}).get("num_samples"), list):
-                dicts.extend([
-                    {**data_dict, 'function_arguments': {**data_dict['function_arguments'], 'num_samples': num_sample}}
-                    for num_sample in samples
-                ])
-            else:
-                dicts.append(data_dict)
-        scenarios = [Scenario.parse_dict(d) for d in dicts]
+        cleaned_input = Scenario.extend_dict(data)
+        scenarios = [Scenario.from_dict(d) for d in cleaned_input]
         return cls(scenarios, name=scenario)

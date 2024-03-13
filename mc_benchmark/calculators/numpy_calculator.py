@@ -1,3 +1,5 @@
+import concurrent.futures
+
 import numpy as np
 
 from mc_benchmark.calculators.base_calculator import BaseCalculator
@@ -6,13 +8,39 @@ class NumpyCalculator(BaseCalculator):
 
     
     @staticmethod
-    def pi_calculator(num_samples: int = 1000):
-        # interestingly, having seperate x and y makes this 30-40% faster
-        x=np.random.random(size=num_samples)
-        y=np.random.random(size=num_samples)
-        d = x**2 + y**2 < 1
-        r = 4 * np.count_nonzero(d) / d.size
-        return r
+    def pi_calculator(num_samples: int = 1000, num_threads: int = 1):
+        
+        def _get_results(samples: int):
+            # interestingly, having seperate x and y makes this 30-40% faster
+            x=np.random.random(size=samples)
+            y=np.random.random(size=samples)
+            d = x**2 + y**2 < 1
+            return np.count_nonzero(d), d.size
+
+        if num_threads == 1:
+            num_in_circle, total_num = _get_results(num_samples)
+            return 4 * num_in_circle / total_num
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+                # Using a dictionary comprehension to map future to its sequence number
+                future_to_number = {
+                    executor.submit(_get_results, num_samples // num_threads): number
+                    for number in range(1, num_threads + 1)
+                }
+
+                result_data = {}
+            
+                for future in concurrent.futures.as_completed(future_to_number):
+                    number = future_to_number[future]
+                    result_data[number] = future.result()
+            
+            total_in_circle, total_points = 0, 0
+            for x in result_data.values():
+                total_in_circle += x[0]
+                total_points += x[1]
+
+            return 4 * total_in_circle / total_points
+
 
     @staticmethod
     def casino_simulation(

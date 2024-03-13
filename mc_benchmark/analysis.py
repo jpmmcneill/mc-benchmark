@@ -1,5 +1,3 @@
-import pathlib
-
 import duckdb
 
 from mc_benchmark import benchmark_results_folder, analysis_folder
